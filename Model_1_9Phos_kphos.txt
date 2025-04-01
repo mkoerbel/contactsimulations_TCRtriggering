@@ -1,0 +1,170 @@
+# Model 1: Kinetic proofreading inside a close contact.
+# k_phos: rate of TCR phosphrylation inside the contact
+
+#graphics opengl_good
+#graphic_delay 1
+
+###
+# Variable model parameters. Comment if using Python to run
+#define pMHC_mdens 0      # mol/um^2 
+#define randomint 42
+#define sim_num 1           # simulation number
+#define results_folder   /Users/NAME/FOLDER/
+#define k_phos 2.2       # Lck phosphorylation rate of TCR in CCZ, pseudo-first order, pTyr/s, reference GanzingerPNAS, Table 2 Arulraj etal.PLOSOne  
+
+
+###
+# Model parameters
+define r_c 0.22         # contact radius, um
+define r_b 1.0         # simulation boundary, um
+
+# Simulation defintions
+define timestep 0.002           # diffusion limited timestep, results dont schange between 0.005 and 0.001 s 
+define simtime 30             # s, from Ed's table 30-70s until triggering
+
+# definitions for TCR
+# TCR segregation not considered, i.e. 0.0
+define tcr_d 0.052      # um^2/s 
+define tcr_mdens 100      # TCR density, mol/um^2 
+
+# definitions for pMHC
+define pMHC_d 0.33      # um^2/s 
+define k_off 0.0119       # s^-1
+define k_on 0.00748      # um^2/(s*mol)
+
+# definitions for pMHC-TCR complex
+define complex_d 0.0    # um^2/s diffusion of pMHC-TCR complex
+
+# display
+define tcr_size r_c*0.02        # display size
+define tcra_size tcr_size*2.0   # display size 
+
+
+### 
+
+# derived defintions
+define a_c 3.14*r_c^2   # contact area, um^2
+define a_b 3.14*r_b^2   # simulation area, um^2
+define tcrnum_out tcr_mdens*(a_b-a_c)               # number TCR outside the contact
+define tcrnum_in tcr_mdens*a_c                      # number TCR inside the contact
+define pMHCnum pMHC_mdens*a_b                       # molecules
+define kon_pseudofirst pMHC_mdens*k_on              # pseudo first order kon rate, s^-1
+
+
+# System space and time defintions
+dim 2                               # 2D system
+boundaries x -r_b-0.01 r_b+0.01 p   # outermost system boundaries on x axis, um
+boundaries y -r_b-0.01 r_b+0.01 p   # outermost system boundaries on y axis, um
+time_start 0 #-timestep                # simulation starting time, s 
+time_stop simtime                   # simulation stopping time, s 
+time_step timestep                  # simulation step time, s 
+random_seed randomint                    # randomint
+
+# Molecular species and their properties
+species tcrp0 tcrp1 tcrp2 tcrp3 tcrp4 tcrp5 tcrp6 tcrp7 tcrp8 tcrp9
+species tcrp0b tcrp1b tcrp2b tcrp3b tcrp4b tcrp5b tcrp6b tcrp7b tcrp8b tcrp9b 
+species_group tcrall tcrp*
+species_group tcrunbound tcrp?
+species_group tcrbound tcrp?b
+
+difc tcrall tcr_d
+difc tcrbound complex_d
+
+display_size tcrp[0123456789]* tcr_size 
+color tcrunbound lightgreen
+color tcrbound olive
+
+start_surface contactborder
+    color back blue             # surface color for graphical output, faces inside contact
+    color front red             # front faces outside
+    thickness 1                 # surface display size
+    panel sph 0 0 r_c 200       # definition of the surface panel
+    rate_internal tcrp0 fsoln bsoln 1 
+    rate_internal tcrp0b fsoln bsoln 1
+
+    # probability of transmitting in to out
+    rate_internal tcrp0 bsoln fsoln 1 tcrp0
+    rate_internal tcrp1 bsoln fsoln 1 tcrp0
+    rate_internal tcrp2 bsoln fsoln 1 tcrp0
+    rate_internal tcrp3 bsoln fsoln 1 tcrp0
+    rate_internal tcrp4 bsoln fsoln 1 tcrp0
+    rate_internal tcrp5 bsoln fsoln 1 tcrp0
+    rate_internal tcrp6 bsoln fsoln 1 tcrp0
+    rate_internal tcrp7 bsoln fsoln 1 tcrp0
+    rate_internal tcrp8 bsoln fsoln 1 tcrp0
+    rate_internal tcrp9 bsoln fsoln 1 tcrp0
+
+    rate_internal tcrp0b bsoln fsoln 1 tcrp0
+    rate_internal tcrp1b bsoln fsoln 1 tcrp0
+    rate_internal tcrp2b bsoln fsoln 1 tcrp0
+    rate_internal tcrp3b bsoln fsoln 1 tcrp0
+    rate_internal tcrp4b bsoln fsoln 1 tcrp0
+    rate_internal tcrp5b bsoln fsoln 1 tcrp0
+    rate_internal tcrp6b bsoln fsoln 1 tcrp0
+    rate_internal tcrp7b bsoln fsoln 1 tcrp0
+    rate_internal tcrp8b bsoln fsoln 1 tcrp0
+    rate_internal tcrp9b bsoln fsoln 1 tcrp0
+
+end_surface
+
+start_surface simborder
+    color back black
+    color front black   
+    thickness 2
+    panel sphere 0 0 r_b 200
+    action both all reflect
+    action all both reflect
+end_surface
+
+start_compartment insidecontact         # the are within the circle
+    surface contactborder               # surface that defines the border
+    point 0 0                           # a point defines inside
+end_compartment
+
+start_compartment insidesim
+    surface simborder
+    point 0 0
+end_compartment
+
+start_compartment outsidecontact
+    compartment equal insidesim
+    compartment andnot insidecontact
+end_compartment
+
+# Chemical reactions
+reaction compartment=insidecontact phos0 tcrp0 -> tcrp1 k_phos
+reaction compartment=insidecontact phos1 tcrp1 -> tcrp2 k_phos
+reaction compartment=insidecontact phos2 tcrp2 -> tcrp3 k_phos
+reaction compartment=insidecontact phos3 tcrp3 -> tcrp4 k_phos
+reaction compartment=insidecontact phos4 tcrp4 -> tcrp5 k_phos
+reaction compartment=insidecontact phos5 tcrp5 -> tcrp6 k_phos
+reaction compartment=insidecontact phos6 tcrp6 -> tcrp7 k_phos
+reaction compartment=insidecontact phos7 tcrp7 -> tcrp8 k_phos
+reaction compartment=insidecontact phos8 tcrp8 -> tcrp9 k_phos
+
+reaction compartment=insidecontact phos0b tcrp0b -> tcrp1b k_phos
+reaction compartment=insidecontact phos1b tcrp1b -> tcrp2b k_phos
+reaction compartment=insidecontact phos2b tcrp2b -> tcrp3b k_phos
+reaction compartment=insidecontact phos3b tcrp3b -> tcrp4b k_phos
+reaction compartment=insidecontact phos4b tcrp4b -> tcrp5b k_phos
+reaction compartment=insidecontact phos5b tcrp5b -> tcrp6b k_phos
+reaction compartment=insidecontact phos6b tcrp6b -> tcrp7b k_phos
+reaction compartment=insidecontact phos7b tcrp7b -> tcrp8b k_phos
+reaction compartment=insidecontact phos8b tcrp8b -> tcrp9b k_phos
+
+reaction compartment=insidecontact binding tcrp? -> tcrp$1b kon_pseudofirst 
+reaction unbinding tcrp?b -> tcrp$1 k_off
+
+# place molecules for initial condition, start with no bound TCR
+compartment_mol tcrnum_in tcrp0 insidecontact
+compartment_mol tcrnum_out tcrp0 outsidecontact
+
+
+# output conform with Python code wrapper
+output_format csv
+output_root results_folder
+output_files model_2_9Phos_pMHC_mdens_k_phos_sim_num.txt #model_2_9Phos_pMHC_mdens_k_phos_sim_num_tcrs.txt # Variable names inside path are replaces
+cmd n 1 molcountspecieslist model_2_9Phos_pMHC_mdens_k_phos_sim_num.txt tcrall tcrbound tcrp0 tcrp0b tcrp1 tcrp1b tcrp2 tcrp2b tcrp3 tcrp3b tcrp4 tcrp4b tcrp5 tcrp5b tcrp6 tcrp6b tcrp7 tcrp7b tcrp8 tcrp8b tcrp9 tcrp9b
+#cmd n 10 listmols3 tcrall model_2_9Phos_pMHC_mdens_k_phos_sim_num_tcrs.txt
+
+end_file
