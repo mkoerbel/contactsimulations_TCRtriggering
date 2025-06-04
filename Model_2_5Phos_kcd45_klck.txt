@@ -1,6 +1,6 @@
 # Model 2: 5 TCR phosphorylations
-# k values are used for the CD45 and Lck reactions
-# Species: TCR, CD45, Lck, pMHC
+# k values for the second order CD45 and Lck reactions
+# Species: TCR, CD45, Lck, pMHC (implicit)
 # IDs of the TCR stay the same throughout the reations. 
 
 #graphics opengl_good
@@ -19,42 +19,41 @@ define r_c 0.22        # contact radius, um
 define r_b 1.0         # simulation boundary, um
 
 # Simulation defintions
-define timestep 0.002           # Kevin: diffusion limited timestep, results dont schange between 0.005 and 0.001 s 
-define simtime 30             # s, from Ed's table 30-70s until triggering
+define timestep 0.002           # from Chen et al.: diffusion limited timestep, results dont schange between 0.005 and 0.001 s 
+define simtime 30               # s, from Jenkins et al.: 30-70s until triggering
 
 # definitions for TCR
-define tcr_d 0.052      # um^2/s 
-define tcr_mdens 100    # TCR density, mol/um^2 
+define tcr_d 0.052              # um^2/s 
+define tcr_mdens 100            # TCR density, mol/um^2 
 
 # definitions for pMHC
-define pMHC_d 0.33      # um^2/s 
-define k_off 0.0119       # s^-1    low: 2.59
-define k_on 0.00748      # um^2/(s*mol)     low: 0.0013
+define pMHC_d 0.33              # um^2/s 
+define k_off 0.0119             # s^-1    low: 2.59
+define k_on 0.00748             # um^2/(s*mol)     low: 0.0013
 
 # definitions for pMHC-TCR complex
-define complex_d 0.0    # um^2/s diffusion of pMHC-TCR complex
+define complex_d 0.0            # um^2/s diffusion of pMHC-TCR complex
 
 # definitions for CD45
-define cd45_mdens 600      # mol/um^2
-define cd45_di 0.113       # um^2/s 
-define cd45_do 0.113       # um^2/s 
+define cd45_mdens 600           # mol/um^2
+define cd45_d 0.113             # um^2/s 
 
 # definitions for Lck
-define lck_mdens 200     # mol/um^2
-define lck_d 0.128       # um^2/s
+define lck_mdens 200            # mol/um^2
+define lck_d 0.128              # um^2/s
 
 
 # display
 define tcr_size r_c*0.02        # display size
 define tcra_size tcr_size*2.0   # display size 
 define cd45_size r_c*0.02       # display size 
-define lck_size r_c*0.02         # display size 
+define lck_size r_c*0.02        # display size 
 
 ### 
 
 # derived defintions
-define a_c 3.14*r_c^2   # contact area, um^2
-define a_b 3.14*r_b^2   # simulation area, um^2
+define a_c 3.14*r_c^2                               # contact area, um^2
+define a_b 3.14*r_b^2                               # simulation area, um^2
 define tcrnum_out tcr_mdens*(a_b-a_c)               # number TCR outside the contact
 define tcrnum_in tcr_mdens*a_c                      # number TCR inside the contact
 define pMHCnum pMHC_mdens*a_b                       # molecules
@@ -69,33 +68,33 @@ define kon_pseudofirst pMHC_mdens*k_on              # pseudo first order kon rat
 dim 2                               # 2D system
 boundaries x -r_b-0.01 r_b+0.01 p   # outermost system boundaries on x axis, um
 boundaries y -r_b-0.01 r_b+0.01 p   # outermost system boundaries on y axis, um
-time_start 0 #-timestep                # simulation starting time, s 
+time_start 0                        # simulation starting time, s 
 time_stop simtime                   # simulation stopping time, s 
 time_step timestep                  # simulation step time, s 
-random_seed randomint                    # randomint
+random_seed randomint               # randomint
 
 # Molecular species and their properties
 species tcr tcrp1 tcrb tcrp1b tcrp2 tcrp2b tcrp3 tcrp3b tcrp4 tcrp4b tcrp5 tcrp5b
-species cd45i cd45o lck
+species cd45 lck
 species_group tcrall tcr*
 species_group tcrallp tcrp*
 species_group tcrbound tcrb tcrp?b
-species_group cd45all cd45?
+species_group cd45all cd45
 
 difc tcrall tcr_d
 difc tcrbound complex_d
-difc cd45i cd45_di
-difc cd45o cd45_do
+difc cd45 cd45_d
 difc lck lck_d
 
 display_size tcr tcr_size 
 display_size tcrb tcr_size 
 display_size tcrp* tcra_size
-display_size cd45* cd45_size
+display_size cd45 cd45_size
 display_size lck lck_size
 color tcr lightgreen
 color tcrb lightgreen
 color tcrp* olive
+color tcrp5* green
 color cd45all maroon
 color lck blue
 
@@ -106,7 +105,7 @@ start_surface contactborder
     panel sph 0 0 r_c 200       # definition of the surface panel
     
     # probability of transmitting out to in
-    rate_internal cd45o fsoln bsoln cd45_proboutin cd45i
+    rate_internal cd45 fsoln bsoln cd45_proboutin
     rate_internal lck fsoln bsoln 1
     rate_internal tcr fsoln bsoln 1 
     rate_internal tcrb fsoln bsoln 1 
@@ -123,7 +122,7 @@ start_surface contactborder
 
     # probability of transmitting in to out
     rate_internal lck bsoln fsoln 1
-    rate_internal cd45i bsoln fsoln cd45_probinout cd45o
+    rate_internal cd45 bsoln fsoln cd45_probinout
     rate_internal tcr bsoln fsoln 1
     rate_internal tcrb bsoln fsoln 1
     rate_internal tcrp1 bsoln fsoln 1
@@ -164,8 +163,8 @@ start_compartment outsidecontact
 end_compartment
 
 ### Chemical reactions
-# with reaction_serialnum I can add rules how serial numbers are treated in reactions.
-# keep SN for all TCRs, so I can track them.
+# with reaction_serialnum one can add rules how serial numbers are treated in reactions.
+# keep SN for all TCRs to track them.
 
 ## phos
 # phos 0 -> 1 (keep SN)
@@ -210,74 +209,44 @@ reaction_serialnum  phos51 r1 new
 
 ## dephos
 # dephos 1 -> 0 (keep SN)
-reaction            dephos10i tcrp1 + cd45i -> tcr + cd45i k_cd45
-reaction_serialnum  dephos10i r1 new
-#product_placement   dephos10i pgemmax 0.2
-reaction            dephos11i tcrp1b + cd45i -> tcrb + cd45i k_cd45
-reaction_serialnum  dephos11i r1 new
-#product_placement   dephos11i pgemmax 0.2
-reaction            dephos10o tcrp1 + cd45o -> tcr + cd45o k_cd45
-reaction_serialnum  dephos10o r1 new
-#product_placement   dephos10o pgemmax 0.2
-reaction            dephos11o tcrp1b + cd45o -> tcrb + cd45o k_cd45
-reaction_serialnum  dephos11o r1 new
-#product_placement   dephos11o pgemmax 0.2
+reaction            dephos10 tcrp1 + cd45 -> tcr + cd45 k_cd45
+reaction_serialnum  dephos10 r1 new
+#product_placement  dephos10 pgemmax 0.2
+reaction            dephos11 tcrp1b + cd45 -> tcrb + cd45 k_cd45
+reaction_serialnum  dephos11 r1 new
+#product_placement  dephos11 pgemmax 0.2
 
 # dephos 2 -> 1 (keep SN)
-reaction            dephos20i tcrp2 + cd45i -> tcrp1 + cd45i k_cd45
-reaction_serialnum  dephos20i r1 new
-product_placement   dephos20i pgemmax 0.2
-reaction            dephos21i tcrp2b + cd45i -> tcrp1b + cd45i k_cd45
-reaction_serialnum  dephos21i r1 new
-product_placement   dephos21i pgemmax 0.2
-reaction            dephos20o tcrp2 + cd45o -> tcrp1 + cd45o k_cd45
-reaction_serialnum  dephos20o r1 new
-product_placement   dephos20o pgemmax 0.2
-reaction            dephos21o tcrp2b + cd45o -> tcrp1b + cd45o k_cd45
-reaction_serialnum  dephos21o r1 new
-product_placement   dephos21o pgemmax 0.2
+reaction            dephos20 tcrp2 + cd45 -> tcrp1 + cd45 k_cd45
+reaction_serialnum  dephos20 r1 new
+product_placement   dephos20 pgemmax 0.2
+reaction            dephos21 tcrp2b + cd45 -> tcrp1b + cd45 k_cd45
+reaction_serialnum  dephos21 r1 new
+product_placement   dephos21 pgemmax 0.2
 
 # dephos 3 -> 2 (keep SN)
-reaction            dephos30i tcrp3 + cd45i -> tcrp2 + cd45i k_cd45
-reaction_serialnum  dephos30i r1 new
-product_placement   dephos30i pgemmax 0.2
-reaction            dephos31i tcrp3b + cd45i -> tcrp2b + cd45i k_cd45
-reaction_serialnum  dephos31i r1 new
-product_placement   dephos31i pgemmax 0.2
-reaction            dephos30o tcrp3 + cd45o -> tcrp2 + cd45o k_cd45
-reaction_serialnum  dephos30o r1 new
-product_placement   dephos30o pgemmax 0.2
-reaction            dephos31o tcrp3b + cd45o -> tcrp2b + cd45o k_cd45
-reaction_serialnum  dephos31o r1 new
-product_placement   dephos31o pgemmax 0.2
+reaction            dephos30 tcrp3 + cd45 -> tcrp2 + cd45 k_cd45
+reaction_serialnum  dephos30 r1 new
+product_placement   dephos30 pgemmax 0.2
+reaction            dephos31 tcrp3b + cd45 -> tcrp2b + cd45 k_cd45
+reaction_serialnum  dephos31 r1 new
+product_placement   dephos31 pgemmax 0.2
 
 # dephos 4 -> 3 (keep SN)
-reaction            dephos40i tcrp4 + cd45i -> tcrp3 + cd45i k_cd45
-reaction_serialnum  dephos40i r1 new
-product_placement   dephos40i pgemmax 0.2
-reaction            dephos41i tcrp4b + cd45i -> tcrp3b + cd45i k_cd45
-reaction_serialnum  dephos41i r1 new
-product_placement   dephos41i pgemmax 0.2
-reaction            dephos40o tcrp4 + cd45o -> tcrp3 + cd45o k_cd45
-reaction_serialnum  dephos40o r1 new
-product_placement   dephos40o pgemmax 0.2
-reaction            dephos41o tcrp4b + cd45o -> tcrp3b + cd45o k_cd45
-reaction_serialnum  dephos41o r1 new
-product_placement   dephos41o pgemmax 0.2
+reaction            dephos40 tcrp4 + cd45 -> tcrp3 + cd45 k_cd45
+reaction_serialnum  dephos40 r1 new
+product_placement   dephos40 pgemmax 0.2
+reaction            dephos41 tcrp4b + cd45 -> tcrp3b + cd45 k_cd45
+reaction_serialnum  dephos41 r1 new
+product_placement   dephos41 pgemmax 0.2
 
 # dephos 5 -> 4 (keep SN)
-reaction            dephos50i tcrp5 + cd45i -> tcrp4 + cd45i k_cd45
-reaction_serialnum  dephos50i r1 new
-product_placement   dephos50i pgemmax 0.2
-reaction            dephos51i tcrp5b + cd45i -> tcrp4b + cd45i k_cd45
-reaction_serialnum  dephos51i r1 new
-product_placement   dephos51i pgemmax 0.2
-reaction            dephos50o tcrp5 + cd45o -> tcrp4 + cd45o k_cd45
-reaction_serialnum  dephos50o r1 new
-product_placement   dephos50o pgemmax 0.2
-reaction            dephos51o tcrp5b + cd45o -> tcrp4b + cd45o k_cd45
-reaction_serialnum  dephos51o r1 new
-product_placement   dephos51o pgemmax 0.2
+reaction            dephos50 tcrp5 + cd45 -> tcrp4 + cd45 k_cd45
+reaction_serialnum  dephos50 r1 new
+product_placement   dephos50 pgemmax 0.2
+reaction            dephos51 tcrp5b + cd45 -> tcrp4b + cd45 k_cd45
+reaction_serialnum  dephos51 r1 new
+product_placement   dephos51 pgemmax 0.2
 
 ## binding
 # binding (keep SN)
@@ -296,17 +265,17 @@ reaction_serialnum  unbinding2 r1
 # place molecules for initial condition, start with no bound TCR
 compartment_mol tcrnum_in tcr insidecontact
 compartment_mol tcrnum_out tcr outsidecontact
-compartment_mol cd45num_in cd45i insidecontact
-compartment_mol cd45num_out cd45o outsidecontact
+compartment_mol cd45num_in cd45 insidecontact
+compartment_mol cd45num_out cd45 outsidecontact
 compartment_mol lcknum lck insidesim
 
 
 # output conform with Python code wrapper
-
 output_format csv
 output_root results_folder
-output_files model_9_5Phos_cd45_mdens_pMHC_mdens_k_off_cd45_exclusion_k_cd45_k_lck_sim_num.txt model_9_5Phos_cd45_mdens_pMHC_mdens_k_off_cd45_exclusion_k_cd45_k_lck_sim_num_tcrs.txt # Variable names inside path are replaced
-cmd n 1 molcountspecieslist model_9_5Phos_cd45_mdens_pMHC_mdens_k_off_cd45_exclusion_k_cd45_k_lck_sim_num.txt tcr tcrb tcrp1 tcrp1b tcrp2 tcrp2b tcrp3 tcrp3b tcrp4 tcrp4b tcrp5 tcrp5b tcrall cd45i cd45o cd45all
-cmd n 10 listmols3 tcrall model_9_5Phos_cd45_mdens_pMHC_mdens_k_off_cd45_exclusion_k_cd45_k_lck_sim_num_tcrs.txt
+output_files model_2_5Phos_cd45_mdens_pMHC_mdens_k_off_cd45_exclusion_k_cd45_k_lck_sim_num.txt model_2_5Phos_cd45_mdens_pMHC_mdens_k_off_cd45_exclusion_k_cd45_k_lck_sim_num_tcrs.txt #model_2_5Phos_cd45_mdens_pMHC_mdens_k_off_cd45_exclusion_k_cd45_k_lck_sim_num_cd45.txt # Variable names inside path are replaced
+cmd n 1 molcountspecieslist model_2_5Phos_cd45_mdens_pMHC_mdens_k_off_cd45_exclusion_k_cd45_k_lck_sim_num.txt tcr tcrb tcrp1 tcrp1b tcrp2 tcrp2b tcrp3 tcrp3b tcrp4 tcrp4b tcrp5 tcrp5b tcrall cd45all
+cmd n 10 listmols3 tcrall model_2_5Phos_cd45_mdens_pMHC_mdens_k_off_cd45_exclusion_k_cd45_k_lck_sim_num_tcrs.txt
+# cmd n 100 listmols3 cd45 model_2_5Phos_cd45_mdens_pMHC_mdens_k_off_cd45_exclusion_k_cd45_k_lck_sim_num_cd45.txt
 
 end_file

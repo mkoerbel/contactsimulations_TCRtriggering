@@ -12,10 +12,10 @@ from itertools import repeat
 
 # IO Parameters
 
-smoldyn_path = "/usr/local/bin/smoldyn" #exe file to call smoldyn
-root_path = "/Users/koerbem/Documents/smoldyn/" 
-model_file = "model_2_5Phos_kcd45_klck.txt"
-results_folder = "/Users/koerbem/Documents/smoldyn/Model_9_5Phos_scan-k/"
+smoldyn_path = "/usr/local/bin/smoldyn" #.exe file lives here to call smoldyn
+root_path = "/Users/.../smoldyn/" # Folder in thich the model_file is located
+model_file = "model_2_5Phos_kcd45_klck.txt" 
+results_folder = "/Users/.../Model_9_5Phos_scan-k/" # full path to output folder
 simnum = 50
 
 # Model Parameters

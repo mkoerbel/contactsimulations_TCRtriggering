@@ -13,9 +13,9 @@ from itertools import repeat
 # IO Parameters
 
 smoldyn_path = "/usr/local/bin/smoldyn" #exe file to call smoldyn
-root_path = "/Users/koerbem/Documents/smoldyn/" 
+root_path = "/Users/.../smoldyn/" # Folder in thich the model_file is located
 model_file = "model_1_9Phos_kphos.txt"
-results_folder = "/Users/koerbem/Documents/smoldyn/Model_1_9Phos_scan-k/"
+results_folder = "/Users/.../Model_1_9Phos_scan-k/" # full path to output folder
 simnum = 100
 
 # Model Parameters
