@@ -1,4 +1,6 @@
-### Code files to run spatial stochastic simulations of TCR triggering in close contacts using Smoldyn.
+## Spatial stochastic simulations of TCR triggering in close contacts using Smoldyn
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22937095.svg)](https://doi.org/10.5281/zenodo.22937094)
 
 Two models are presented, alongside the Notebook to reproduce figures 7 and S12 in the publication:
 
@@ -8,4 +10,4 @@ If you use any of the above code, please consider citing this publication.
 
 ### Usage
 
-Running the files requires a Python environment with the following packages: numpy, pandas, seaborn
+Running the files requires a Python environment with the following packages: numpy, pandas, seaborn.
